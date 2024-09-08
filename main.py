@@ -59,7 +59,7 @@ start_time = time.time()
 # Загрузка звуков
 hit_sound = pygame.mixer.Sound("sounds/hit.wav")
 miss_sound = pygame.mixer.Sound("sounds/miss.wav")
-end_game_sound = pygame.mixer.Sound("sounds/game-over2.wav")  # Звук окончания игры
+end_game_sound = pygame.mixer.Sound("sounds/game-over.wav")  # Звук окончания игры
 
 # Параметры для анимации вспышки
 flash_duration = 1.0
