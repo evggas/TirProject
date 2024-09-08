@@ -1,44 +1,234 @@
-from turtledemo.nim import SCREENWIDTH
-
 import pygame
 import random
+import time
 
-from pygame.examples.cursors import image
-
+# Инициализация Pygame
 pygame.init()
 
+# Настройки экрана
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption("Игра Тир")
 icon = pygame.image.load("image/image_converted.jpeg")
 pygame.display.set_icon(icon)
 
-target_img = pygame.image.load("image/target.jpeg")
-
+# Размеры мишени
 target_width = 80
 target_height = 80
 
-target_x = random.randint(0, SCREEN_WIDTH-target_width)
-target_y = random.randint(0, SCREEN_HEIGHT-target_height)
+# Загружаем изображение мишени
+target_img = pygame.image.load("image/target.jpeg")
 
-color =(random.randint(0,225), random.randint(0,225 ),random.randint(0,225))
+# Масштабируем изображение мишени
+target_img = pygame.transform.scale(target_img, (target_width, target_height))
 
+# Цвет фона
+color = (random.randint(0, 225), random.randint(0, 225), random.randint(0, 225))
 
+# Шрифт для текста
+font = pygame.font.SysFont(None, 55)
+small_font = pygame.font.SysFont(None, 40)  # Шрифт для инструкций
+large_font = pygame.font.SysFont(None, 70)  # Шрифт для плавающих очков
+
+# Счётчик очков
+score = 0
+
+# Таймер для игры
+game_time = 30  # Время игры в секундах
+start_time = time.time()
+
+# Загрузка звуков
+hit_sound = pygame.mixer.Sound("sounds/hit.wav")
+miss_sound = pygame.mixer.Sound("sounds/miss.wav")
+
+# Параметры для анимации вспышки
+flash_duration = 1.0  # Продолжительность вспышки увеличена до 1 секунды
+flash_timer = 0
+is_flashing = False  # Флаг, показывающий, происходит ли вспышка
+
+# Список для плавающих очков
+floating_scores = []
+
+# Функция для отображения текста
+def draw_text(text, font, color, surface, x, y):
+    text_obj = font.render(text, True, color)
+    surface.blit(text_obj, (x, y))
+
+# Класс для плавающих очков
+class FloatingScore:
+    def __init__(self, x, y, score_value):
+        self.x = x
+        self.y = y
+        self.score_value = score_value
+        self.timer = 3.0  # Плавающие очки остаются видимыми 3 секунды
+
+    def draw(self, surface):
+        draw_text(f"+{self.score_value}", large_font, (255, 255, 0), surface, self.x, self.y)
+        self.y -= 0.5  # Очки будут подниматься медленнее
+        self.timer -= 0.03  # Замедляем исчезновение очков
+
+# Функция для выбора сложности
+def choose_difficulty():
+    choosing = True
+    while choosing:
+        screen.fill((0, 0, 0))
+        draw_text("Выберите сложность:", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 250, SCREEN_HEIGHT // 2 - 100)
+        draw_text("1. Легкий", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2)
+        draw_text("2. Средний", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 60)
+        draw_text("3. Сложный", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 120)
+        pygame.display.update()
+
+        # Получаем координаты мыши
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        # Проверка нажатия мыши по кнопкам
+        if pygame.mouse.get_pressed()[0]:
+            if SCREEN_WIDTH // 2 - 100 <= mouse_x <= SCREEN_WIDTH // 2 + 100:
+                if SCREEN_HEIGHT // 2 <= mouse_y <= SCREEN_HEIGHT // 2 + 50:
+                    return 1  # Легкий
+                elif SCREEN_HEIGHT // 2 + 60 <= mouse_y <= SCREEN_HEIGHT // 2 + 110:
+                    return 2  # Средний
+                elif SCREEN_HEIGHT // 2 + 120 <= mouse_y <= SCREEN_HEIGHT // 2 + 170:
+                    return 3  # Сложный
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    return 1  # Легкий
+                if event.key == pygame.K_2:
+                    return 2  # Средний
+                if event.key == pygame.K_3:
+                    return 3  # Сложный
+
+# Функция для перезапуска игры
+def restart_game():
+    global difficulty, target_speed_x, target_speed_y, target_x, target_y, score, start_time
+    difficulty = choose_difficulty()
+    score = 0
+    start_time = time.time()
+    set_speed()
+
+# Установка скорости мишени в зависимости от сложности
+def set_speed():
+    global target_speed_x, target_speed_y
+    if difficulty == 1:  # Легкий
+        target_speed_x = random.choice([-0.3, 0.3])
+        target_speed_y = random.choice([-0.3, 0.3])
+    elif difficulty == 2:  # Средний
+        target_speed_x = random.choice([-0.6, 0.6])
+        target_speed_y = random.choice([-0.6, 0.6])
+    else:  # Сложный
+        target_speed_x = random.choice([-1, 1])
+        target_speed_y = random.choice([-1, 1])
+
+# Выбор уровня сложности
+difficulty = choose_difficulty()
+set_speed()
+
+# Позиция мишени
+target_x = random.randint(0, SCREEN_WIDTH - target_width)
+target_y = random.randint(0, SCREEN_HEIGHT - target_height)
+
+# Инициализируем переменную message
+message = ""
+
+# Основной игровой цикл
 running = True
 while running:
+    elapsed_time = time.time() - start_time  # Вычисляем прошедшее время
+    remaining_time = max(0, int(game_time - elapsed_time))  # Оставшееся время
+
+    # Если время вышло, игра завершена
+    if remaining_time == 0:
+        message = f"Время вышло! Очки: {score}"
+        draw_text(message, font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2)
+        pygame.display.update()
+        time.sleep(3)
+        running = False
+
+    # Заполняем экран цветом
     screen.fill(color)
+
+    # Обрабатываем события
     for event in pygame.event.get():
-        if event.type == pygame. QUIT:
+        if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame. MOUSEBUTTONDOWN:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:  # Перезапуск игры с выбором сложности
+                restart_game()
+        if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
+
+            # Проверяем, попал ли игрок в мишень
             if target_x < mouse_x < target_x + target_width and target_y < mouse_y < target_y + target_height:
+                score += 1  # Увеличиваем счёт
                 target_x = random.randint(0, SCREEN_WIDTH - target_width)
                 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
+                message = "Попал в мишень!"
+                pygame.mixer.Sound.play(hit_sound)  # Звук попадания
 
+                # Запускаем вспышку
+                is_flashing = True
+                flash_timer = flash_duration
+
+                # Добавляем плавающие очки
+                floating_scores.append(FloatingScore(mouse_x, mouse_y, 1))
+
+                # Изменяем цвет фона
+                color = (random.randint(0, 225), random.randint(0, 225), random.randint(0, 225))
+            else:
+                message = "Промах!"
+                pygame.mixer.Sound.play(miss_sound)  # Звук промаха
+
+    # Движение мишени
+    target_x += target_speed_x
+    target_y += target_speed_y
+
+    # Проверка на столкновение с границами экрана
+    if target_x <= 0 or target_x + target_width >= SCREEN_WIDTH:
+        target_speed_x = -target_speed_x  # Меняем направление по X
+    if target_y <= 0 or target_y + target_height >= SCREEN_HEIGHT:
+        target_speed_y = -target_speed_y  # Меняем направление по Y
+
+    # Вспышка при попадании
+    if is_flashing:
+        flash_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        flash_surface.set_alpha(128)  # Полупрозрачная белая вспышка
+        flash_surface.fill((255, 255, 255))
+        screen.blit(flash_surface, (0, 0))
+        flash_timer -= 0.05
+        if flash_timer <= 0:
+            is_flashing = False
+
+    # Отрисовываем мишень
     screen.blit(target_img, (target_x, target_y))
 
+    # Отрисовываем плавающие очки
+    for floating_score in floating_scores[:]:
+        floating_score.draw(screen)
+        if floating_score.timer <= 0:
+            floating_scores.remove(floating_score)
+
+    # Отрисовываем сообщение
+    if message:
+        draw_text(message, font, (255, 255, 255), screen, 10, 10)
+
+    # Отрисовываем счёт
+    draw_text(f"Очки: {score}", font, (255, 255, 255), screen, 10, 60)
+
+    # Отрисовываем таймер
+    draw_text(f"Время: {remaining_time}", font, (255, 255, 255), screen, 10, 110)
+
+    # Отрисовываем инструкцию для выхода в меню
+    draw_text("Нажмите 'R' для выхода в меню", small_font, (255, 255, 255), screen, 10, SCREEN_HEIGHT - 40)
+
+    # Обновляем экран
     pygame.display.update()
+
 pygame.quit()
+
