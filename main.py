@@ -51,6 +51,8 @@ large_font = pygame.font.SysFont(None, 70)  # Шрифт для плавающи
 
 # Счётчик очков
 score = 0
+level = 1  # Начальный уровень
+
 
 # Таймер для игры
 game_time = 30  # Время игры в секундах
@@ -85,7 +87,7 @@ class FloatingScore:
     def draw(self, surface):
         draw_text(f"+{self.score_value}", large_font, (255, 255, 0), surface, self.x, self.y)
         self.y -= 0.5  # Очки будут подниматься медленнее
-        self.timer -= 0.03  # Замедляем исчезновение очков
+        self.timer -= 0.02  # Замедляем исчезновение очков
 
 # Функция для выбора сложности
 def choose_difficulty():
@@ -189,6 +191,15 @@ message = ""
 # Обратный отсчёт перед началом игры
 countdown()  # Добавляем обратный отсчёт
 
+def show_level_up_message():
+    screen.fill((0, 0, 0))  # Чёрный фон
+    draw_text(f"Уровень {level}!", large_font, (255, 255, 0), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2)
+    pygame.display.update()
+    time.sleep(2)  # Пауза на 2 секунды
+
+# Добавляем переменную для отслеживания следующего уровня
+next_level_score = level * 10
+
 # Основной игровой цикл
 running = True
 while running:
@@ -223,9 +234,32 @@ while running:
                 target_x = random.randint(0, SCREEN_WIDTH - target_width)
                 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
                 pygame.mixer.Sound.play(hit_sound)
-                is_flashing = True
-                flash_timer = flash_duration
-                floating_scores.append(FloatingScore(mouse_x, mouse_y, 1))
+
+                # Добавляем плавающие очки при попадании
+                floating_scores.append(
+                    FloatingScore(mouse_x, mouse_y, 1))  # Теперь это всегда выполняется при попадании
+
+                # Увеличение скорости каждые 5 очков
+                if score % 5 == 0:  # Каждые 5 очков
+                    target_speed_x *= 1.05  # Увеличиваем скорость на 5%
+                    target_speed_y *= 1.05
+
+                    # Переход на новый уровень каждые 10 очков
+                if score >= level * 10:  # Уровень повышается каждые 10 очков
+                    level += 1  # Увеличиваем уровень
+                    show_level_up_message()  # Показываем сообщение о новом уровне
+                    target_speed_x *= 1.2  # Увеличиваем сложность
+                    target_speed_y *= 1.2
+
+                    # Меняем фон при переходе на новый уровень
+
+                    selected_background = random.choice(background_images)
+                    background_img = pygame.image.load(selected_background)
+                    background_img = pygame.transform.scale(background_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+                    is_flashing = True
+                    flash_timer = flash_duration
+                    floating_scores.append(FloatingScore(mouse_x, mouse_y, 1))
             else:
                 pygame.mixer.Sound.play(miss_sound)
 
