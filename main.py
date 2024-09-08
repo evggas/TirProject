@@ -14,18 +14,29 @@ pygame.display.set_caption("Игра Тир")
 icon = pygame.image.load("image/image_converted.jpeg")
 pygame.display.set_icon(icon)
 
+# Список фонов
+background_images = [
+    "backgrounds/1.1.jpeg",  # Космическая туманность
+    "backgrounds/2.1.jpeg",  # Футуристический город
+    "backgrounds/3.1.jpeg",  # Поверхность инопланетной планеты
+    "backgrounds/4.jpeg",  # Кибернетическая сеть
+    "backgrounds/5.jpeg",  # Метеоритный дождь
+    "backgrounds/6.jpeg",  # Звёздное небо
+    "backgrounds/7.1.jpeg"  # Интерьер космического корабля
+]
+
+# Выбор случайного фона
+selected_background = random.choice(background_images)
+background_img = pygame.image.load(selected_background)
+background_img = pygame.transform.scale(background_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
 # Размеры мишени
-target_width = 80
-target_height = 80
+target_width = 90
+target_height = 90
 
 # Загружаем изображение мишени
-target_img = pygame.image.load("image/target.jpeg")
-
-# Масштабируем изображение мишени
+target_img = pygame.image.load("image/target.png")
 target_img = pygame.transform.scale(target_img, (target_width, target_height))
-
-# Цвет фона
-color = (random.randint(0, 225), random.randint(0, 225), random.randint(0, 225))
 
 # Шрифт для текста
 font = pygame.font.SysFont(None, 55)
@@ -44,9 +55,9 @@ hit_sound = pygame.mixer.Sound("sounds/hit.wav")
 miss_sound = pygame.mixer.Sound("sounds/miss.wav")
 
 # Параметры для анимации вспышки
-flash_duration = 1.0  # Продолжительность вспышки увеличена до 1 секунды
+flash_duration = 1.0
 flash_timer = 0
-is_flashing = False  # Флаг, показывающий, происходит ли вспышка
+is_flashing = False
 
 # Список для плавающих очков
 floating_scores = []
@@ -134,16 +145,14 @@ set_speed()
 target_x = random.randint(0, SCREEN_WIDTH - target_width)
 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
 
-# Инициализируем переменную message
 message = ""
 
 # Основной игровой цикл
 running = True
 while running:
-    elapsed_time = time.time() - start_time  # Вычисляем прошедшее время
-    remaining_time = max(0, int(game_time - elapsed_time))  # Оставшееся время
+    elapsed_time = time.time() - start_time
+    remaining_time = max(0, int(game_time - elapsed_time))
 
-    # Если время вышло, игра завершена
     if remaining_time == 0:
         message = f"Время вышло! Очки: {score}"
         draw_text(message, font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2)
@@ -151,54 +160,41 @@ while running:
         time.sleep(3)
         running = False
 
-    # Заполняем экран цветом
-    screen.fill(color)
+    # Отрисовка фона
+    screen.blit(background_img, (0, 0))
 
     # Обрабатываем события
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:  # Перезапуск игры с выбором сложности
+            if event.key == pygame.K_r:
                 restart_game()
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-
-            # Проверяем, попал ли игрок в мишень
             if target_x < mouse_x < target_x + target_width and target_y < mouse_y < target_y + target_height:
-                score += 1  # Увеличиваем счёт
+                score += 1
                 target_x = random.randint(0, SCREEN_WIDTH - target_width)
                 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
-                message = "Попал в мишень!"
-                pygame.mixer.Sound.play(hit_sound)  # Звук попадания
-
-                # Запускаем вспышку
+                pygame.mixer.Sound.play(hit_sound)
                 is_flashing = True
                 flash_timer = flash_duration
-
-                # Добавляем плавающие очки
                 floating_scores.append(FloatingScore(mouse_x, mouse_y, 1))
-
-                # Изменяем цвет фона
-                color = (random.randint(0, 225), random.randint(0, 225), random.randint(0, 225))
             else:
-                message = "Промах!"
-                pygame.mixer.Sound.play(miss_sound)  # Звук промаха
+                pygame.mixer.Sound.play(miss_sound)
 
     # Движение мишени
     target_x += target_speed_x
     target_y += target_speed_y
 
-    # Проверка на столкновение с границами экрана
     if target_x <= 0 or target_x + target_width >= SCREEN_WIDTH:
-        target_speed_x = -target_speed_x  # Меняем направление по X
+        target_speed_x = -target_speed_x
     if target_y <= 0 or target_y + target_height >= SCREEN_HEIGHT:
-        target_speed_y = -target_speed_y  # Меняем направление по Y
+        target_speed_y = -target_speed_y
 
-    # Вспышка при попадании
     if is_flashing:
         flash_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        flash_surface.set_alpha(128)  # Полупрозрачная белая вспышка
+        flash_surface.set_alpha(128)
         flash_surface.fill((255, 255, 255))
         screen.blit(flash_surface, (0, 0))
         flash_timer -= 0.05
@@ -231,4 +227,3 @@ while running:
     pygame.display.update()
 
 pygame.quit()
-
