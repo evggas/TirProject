@@ -172,11 +172,22 @@ def end_game_screen():
 difficulty = choose_difficulty()
 set_speed()
 
+# Функция обратного отсчёта
+def countdown():
+    for i in range(3, 0, -1):  # Обратный отсчёт с 3 до 1
+        screen.fill((0, 0, 0))  # Чёрный фон
+        draw_text(str(i), font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT // 2 - 50)
+        pygame.display.update()
+        time.sleep(1)  # Пауза на 1 секунду перед каждым числом
+
 # Позиция мишени
 target_x = random.randint(0, SCREEN_WIDTH - target_width)
 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
 
 message = ""
+
+# Обратный отсчёт перед началом игры
+countdown()  # Добавляем обратный отсчёт
 
 # Основной игровой цикл
 running = True
