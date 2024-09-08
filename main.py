@@ -16,6 +16,10 @@ pygame.display.set_caption("Звёздный стрелок")
 icon = pygame.image.load("image/image_converted.jpeg")
 pygame.display.set_icon(icon)
 
+# Загрузка фоновой музыки и её запуск
+pygame.mixer.music.load('sounds/506324.wav')  # Загрузка фоновой музыки
+pygame.mixer.music.play(-1)  # Зацикливание музыки (играет бесконечно)
+
 # Список фонов
 background_images = [
     "backgrounds/1.1.jpeg",  # Космическая туманность
@@ -55,6 +59,7 @@ start_time = time.time()
 # Загрузка звуков
 hit_sound = pygame.mixer.Sound("sounds/hit.wav")
 miss_sound = pygame.mixer.Sound("sounds/miss.wav")
+end_game_sound = pygame.mixer.Sound("sounds/game-over.wav")  # Звук окончания игры
 
 # Параметры для анимации вспышки
 flash_duration = 1.0
@@ -181,6 +186,10 @@ while running:
 
     if remaining_time == 0:
         message = f"Время вышло! Очки: {score}"
+
+        # Проигрываем звук окончания игры
+        pygame.mixer.Sound.play(end_game_sound)
+
         draw_text(message, font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2)
         pygame.display.update()
         time.sleep(3)
