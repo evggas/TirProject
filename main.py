@@ -4,11 +4,13 @@ import time
 
 # Инициализация Pygame
 pygame.init()
-
 # Настройки экрана
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1280  # Увеличенный размер окна
+SCREEN_HEIGHT = 720
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Ограничение FPS
+clock = pygame.time.Clock()
 
 pygame.display.set_caption("Игра Тир")
 icon = pygame.image.load("image/image_converted.jpeg")
@@ -128,14 +130,15 @@ def restart_game():
 def set_speed():
     global target_speed_x, target_speed_y
     if difficulty == 1:  # Легкий
-        target_speed_x = random.choice([-0.3, 0.3])
-        target_speed_y = random.choice([-0.3, 0.3])
+        target_speed_x = random.choice([-0.3, 0.3]) * (SCREEN_WIDTH / 600)  # Уменьшили базовое значение
+        target_speed_y = random.choice([-0.3, 0.3]) * (SCREEN_HEIGHT / 400)  # Уменьшили базовое значение
     elif difficulty == 2:  # Средний
-        target_speed_x = random.choice([-0.6, 0.6])
-        target_speed_y = random.choice([-0.6, 0.6])
+        target_speed_x = random.choice([-0.6, 0.6]) * (SCREEN_WIDTH / 600)
+        target_speed_y = random.choice([-0.6, 0.6]) * (SCREEN_HEIGHT / 400)
     else:  # Сложный
-        target_speed_x = random.choice([-1, 1])
-        target_speed_y = random.choice([-1, 1])
+        target_speed_x = random.choice([-1, 1]) * (SCREEN_WIDTH / 600)
+        target_speed_y = random.choice([-1, 1]) * (SCREEN_HEIGHT / 400)
+
 
 # Функция для отображения экрана с предложением продолжить или выйти
 def end_game_screen():
