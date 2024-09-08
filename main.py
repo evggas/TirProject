@@ -12,7 +12,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 # Ограничение FPS
 clock = pygame.time.Clock()
 
-pygame.display.set_caption("Игра Тир")
+pygame.display.set_caption("Вызов мишеней")
 icon = pygame.image.load("image/image_converted.jpeg")
 pygame.display.set_icon(icon)
 
