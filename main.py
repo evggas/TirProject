@@ -35,7 +35,7 @@ target_width = 90
 target_height = 90
 
 # Загружаем изображение мишени
-target_img = pygame.image.load("image/target.png")
+target_img = pygame.image.load("image/target4.png")
 target_img = pygame.transform.scale(target_img, (target_width, target_height))
 
 # Шрифт для текста
@@ -137,6 +137,29 @@ def set_speed():
         target_speed_x = random.choice([-1, 1])
         target_speed_y = random.choice([-1, 1])
 
+# Функция для отображения экрана с предложением продолжить или выйти
+def end_game_screen():
+    screen.fill((0, 0, 0))
+    draw_text("Хотите продолжить?", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 200,
+              SCREEN_HEIGHT // 2 - 100)
+    draw_text("Y - Продолжить", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2)
+    draw_text("N - Выйти", font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 60)
+    pygame.display.update()
+
+    choosing = True
+    while choosing:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_y:  # Если пользователь хочет продолжить
+                    restart_game()
+                    choosing = False
+                if event.key == pygame.K_n:  # Если пользователь хочет выйти
+                    pygame.quit()
+                    exit()
+
 # Выбор уровня сложности
 difficulty = choose_difficulty()
 set_speed()
@@ -158,7 +181,7 @@ while running:
         draw_text(message, font, (255, 255, 255), screen, SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2)
         pygame.display.update()
         time.sleep(3)
-        running = False
+        end_game_screen()  # Вызов экрана для выбора: продолжить или выйти
 
     # Отрисовка фона
     screen.blit(background_img, (0, 0))
